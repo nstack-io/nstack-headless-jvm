@@ -1,4 +1,4 @@
-package dk.nodes.nstack_headless
+package dk.nodes.nstack_headless.common
 
 internal class TimedCache<out T>(
     private val validityPeriodMilliseconds: ULong,
