@@ -4,7 +4,7 @@ import dk.nodes.nstack_headless.common.BaseUrl
 import java.net.URL
 
 
-internal data class LocalizationUrl(
+internal data class PlatformLocalizationsUrl(
     private val platform: Platform = Platform.BACKEND,
     private val isDeveloperMode: Boolean = false,
 ) {

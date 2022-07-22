@@ -4,13 +4,13 @@ import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*
 
-internal class LocalizationUrlTest {
+internal class PlatformLocalizationsUrlTest {
 
     @Test
     fun `LocalizationUrl returns valid URL`() {
-        val backendDevUrl = LocalizationUrl(platform = Platform.BACKEND, isDeveloperMode = true)
-        val mobileNonDevUrl = LocalizationUrl(platform = Platform.MOBILE, isDeveloperMode = false)
-        val webNonDevUrl = LocalizationUrl(platform = Platform.WEB, isDeveloperMode = false)
+        val backendDevUrl = PlatformLocalizationsUrl(platform = Platform.BACKEND, isDeveloperMode = true)
+        val mobileNonDevUrl = PlatformLocalizationsUrl(platform = Platform.MOBILE, isDeveloperMode = false)
+        val webNonDevUrl = PlatformLocalizationsUrl(platform = Platform.WEB, isDeveloperMode = false)
 
         assertEquals("https://nstack.io/api/v2/content/localize/resources/platforms/backend?dev=true", "$backendDevUrl")
         assertEquals("https://nstack.io/api/v2/content/localize/resources/platforms/mobile?dev=false", "$mobileNonDevUrl")
