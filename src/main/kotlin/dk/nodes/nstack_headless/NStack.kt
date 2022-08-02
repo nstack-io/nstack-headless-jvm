@@ -15,7 +15,7 @@ class NStack(
         translationKey: String,
         language: String,
     ): CompletableFuture<String> {
-        return CompletableFuture.completedFuture("Hello")
+        return CompletableFuture.completedFuture("Hello, world!")
     }
 
     override fun provide() = configuration
