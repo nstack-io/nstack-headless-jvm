@@ -8,12 +8,12 @@ internal class LocalizationTest {
 
     @Test
     fun `Return proper translation with valid keys`() {
-        val sections = mapOf(
-            "default" to mapOf(
+        val sections = mutableMapOf(
+            "default" to mutableMapOf(
                 "someKey" to "Some value",
                 "someOtherKey" to "Some other value",
             ),
-            "otherSection" to mapOf(
+            "otherSection" to mutableMapOf(
                 "someKey" to "Some value from another section"
             ),
         )
@@ -26,10 +26,10 @@ internal class LocalizationTest {
 
     @Test
     fun `Return null if translation doesn't exist`() {
-        val sections = mapOf(
-            "default" to mapOf("someKey" to "Some value"),
-            "default" to mapOf("someOtherKey" to "Some other value"),
-            "otherSection" to mapOf("someKey" to "Some value from another section"),
+        val sections = mutableMapOf(
+            "default" to mutableMapOf("someKey" to "Some value"),
+            "default" to mutableMapOf("someOtherKey" to "Some other value"),
+            "otherSection" to mutableMapOf("someKey" to "Some value from another section"),
         )
         val localization = Localization(sections)
 

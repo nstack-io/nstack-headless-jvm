@@ -1,11 +1,10 @@
 package dk.nodes.nstack_headless.common
 
 import okhttp3.HttpUrl
-import java.net.URI
 import java.net.URL
 
 
-object BaseUrl {
+internal object BaseUrl {
 
     private const val scheme = "https"
     private const val host = "nstack.io"
@@ -18,7 +17,7 @@ object BaseUrl {
             .toUrl()
     }
 
-    internal fun createBuilder(): HttpUrl.Builder {
+    fun createBuilder(): HttpUrl.Builder {
         return HttpUrl.Builder()
             .scheme(scheme)
             .host(host)

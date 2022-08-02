@@ -1,23 +1,22 @@
 package dk.nodes.nstack_headless
 
-import dk.nodes.nstack.kotlin.models.Language
-import dk.nodes.nstack.kotlin.models.Result
+import dk.nodes.nstack_headless.common.dependency_injection.Provider
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
-class NStack @JvmOverloads constructor(
+class NStack(
     private val configuration: Configuration,
-    private val executor: ExecutorService = Executors.newCachedThreadPool(),
-) {
+) : Provider<Configuration> {
 
     fun getTranslation(
-        section: String,
-        key: String,
-        language: Language
-    ): Future<Result<String>> {
-        return future(executor) {
-            Result.Success("Hello")
-        }
+        sectionKey: String,
+        translationKey: String,
+        language: String,
+    ): CompletableFuture<String> {
+        return CompletableFuture.completedFuture("Hello")
     }
+
+    override fun provide() = configuration
 }

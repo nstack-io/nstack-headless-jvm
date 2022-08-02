@@ -6,7 +6,6 @@ internal class Localizations(
 
 ) {
 
-    private val cachedLocalizations: MutableMap<Locale, TimedCache<Localization>> = mutableMapOf()
 
 
 }

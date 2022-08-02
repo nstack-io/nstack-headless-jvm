@@ -1,5 +1,6 @@
-package dk.nodes.nstack_headless.localize
+package dk.nodes.nstack_headless.localize.data
 
+import dk.nodes.nstack_headless.localize.Platform
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*

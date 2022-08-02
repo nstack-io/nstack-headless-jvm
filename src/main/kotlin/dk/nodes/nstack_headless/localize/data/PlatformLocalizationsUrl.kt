@@ -1,6 +1,7 @@
-package dk.nodes.nstack_headless.localize
+package dk.nodes.nstack_headless.localize.data
 
 import dk.nodes.nstack_headless.common.BaseUrl
+import dk.nodes.nstack_headless.localize.Platform
 import java.net.URL
 
 
@@ -15,7 +16,7 @@ internal data class PlatformLocalizationsUrl(
             .addPathSegment("localize")
             .addPathSegment("resources")
             .addPathSegment("platforms")
-            .addPathSegment(platform.platformId)
+            .addEncodedPathSegment(platform.platformId)
             .addQueryParameter("dev", "$isDeveloperMode")
             .build()
             .toUrl()
