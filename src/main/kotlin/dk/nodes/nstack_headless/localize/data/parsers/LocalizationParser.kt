@@ -11,7 +11,7 @@ internal object LocalizationParser {
         translationTree.fieldNames().forEach { sectionKey ->
             translationTree.get(sectionKey).fieldNames().forEach { translationKey ->
                 val translation = translationTree
-                    .path("$sectionKey.$translationKey")
+                    .path("$sectionKey").path("$translationKey")
                     .textValue()
 
                 localization.add(sectionKey, translationKey, translation)

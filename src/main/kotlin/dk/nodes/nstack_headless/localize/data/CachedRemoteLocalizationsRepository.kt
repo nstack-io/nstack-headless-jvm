@@ -1,20 +1,19 @@
 package dk.nodes.nstack_headless.localize.data
 
-import com.fasterxml.jackson.core.JsonFactory
 import dk.nodes.nstack_headless.Configuration
 import dk.nodes.nstack_headless.common.TimedCache
 import dk.nodes.nstack_headless.common.dependency_injection.Provider
+import dk.nodes.nstack_headless.localize.Locale
 import dk.nodes.nstack_headless.localize.Localization
 import dk.nodes.nstack_headless.localize.Platform
 import dk.nodes.nstack_headless.localize.data.parsers.LocalizationParser
 import dk.nodes.nstack_headless.localize.data.parsers.LocalizationUrlParser
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.Response
 import java.io.IOException
 import java.net.URL
-import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 internal class CachedRemoteLocalizationsRepository(
@@ -29,10 +28,10 @@ internal class CachedRemoteLocalizationsRepository(
     override suspend fun getLocalization(locale: Locale, platform: Platform): Result<Localization> {
         val cacheLifetimeMillis = TimeUnit.MINUTES.toMillis(configuration.cacheLifetimeMinutes.toLong()).toULong()
 
-        if (localizations.contains(locale)) {
+        if (!localizations.contains(locale)) {
             val cache = TimedCache(
                 validityPeriodMilliseconds = cacheLifetimeMillis,
-                refresh = { getLocalizationFromRemote(platform) }
+                refresh = { getLocalizationFromRemote(locale, platform) }
             )
 
             localizations[locale] = cache
@@ -48,9 +47,8 @@ internal class CachedRemoteLocalizationsRepository(
         }
     }
 
-    private suspend fun getLocalizationFromRemote(platform: Platform): Localization {
-        val url = getLocalizationUrlFromRemote(platform, configuration.isDeveloperMode)
-
+    private suspend fun getLocalizationFromRemote(locale: Locale, platform: Platform): Localization {
+        val url = getLocalizationUrlFromRemote(locale, platform, configuration.isDeveloperMode)
         return getLocalizationFromRemote(url)
     }
 
@@ -69,17 +67,17 @@ internal class CachedRemoteLocalizationsRepository(
                     if (!response.isSuccessful) {
                         throw IOException("Unexpected response code: $response")
                     } else {
-                        response
+                        it.resume(response
                             .body
                             .let { body -> body ?: throw IOException("No body provided in response: $response") }
                             .string()
-                            .let { json -> LocalizationParser.parse(json) }
+                            .let { json -> LocalizationParser.parse(json) })
                     }
                 }
         }
     }
 
-    private suspend fun getLocalizationUrlFromRemote(platform: Platform, isDeveloperMode: Boolean): URL {
+    private suspend fun getLocalizationUrlFromRemote(locale: Locale, platform: Platform, isDeveloperMode: Boolean): URL {
 
 
         val request = Request
@@ -95,13 +93,14 @@ internal class CachedRemoteLocalizationsRepository(
                     if (!response.isSuccessful) {
                         throw IOException("Unexpected response code: $response")
                     } else {
-                        response
+                        it.resume(response
                             .body
                             .let { body -> body ?: throw IOException("No body provided in response: $response") }
                             .string()
-                            .let { json -> LocalizationUrlParser.parse(json) }
+                            .let { json -> LocalizationUrlParser.parse(locale, json) })
                     }
                 }
+
         }
     }
 }
