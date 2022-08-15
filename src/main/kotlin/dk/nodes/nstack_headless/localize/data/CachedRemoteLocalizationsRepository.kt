@@ -8,11 +8,10 @@ import dk.nodes.nstack_headless.localize.Localization
 import dk.nodes.nstack_headless.localize.Platform
 import dk.nodes.nstack_headless.localize.data.parsers.LocalizationParser
 import dk.nodes.nstack_headless.localize.data.parsers.LocalizationUrlParser
-import okhttp3.OkHttpClient
-import okhttp3.Request
+import okhttp3.*
 import java.io.IOException
 import java.net.URL
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeUnit.MINUTES
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -26,81 +25,48 @@ internal class CachedRemoteLocalizationsRepository(
     private val configuration: Configuration = configurationProvider.provide()
 
     override suspend fun getLocalization(locale: Locale, platform: Platform): Result<Localization> {
-        val cacheLifetimeMillis = TimeUnit.MINUTES.toMillis(configuration.cacheLifetimeMinutes.toLong()).toULong()
-
-        if (!localizations.contains(locale)) {
-            val cache = TimedCache(
-                validityPeriodMilliseconds = cacheLifetimeMillis,
-                refresh = { getLocalizationFromRemote(locale, platform) }
-            )
-
-            localizations[locale] = cache
-        }
-
-        return try {
-            localizations[locale]
-                .let { it ?: throw IllegalStateException("The localization should never be null here") }
-                .get()
-                .let { localization -> Result.success(localization) }
-        } catch (exception: IOException) {
-            Result.failure(exception)
-        }
+        return localizations.getOrPut(locale) {
+            TimedCache(
+                validityPeriodMilliseconds = MINUTES.toMillis(configuration.cacheLifetimeMinutes.toLong()).toULong(),
+                refresh = { fetchLocalization(locale, platform) })}
+            .let { cache -> Result.success(cache.get()) }
     }
 
-    private suspend fun getLocalizationFromRemote(locale: Locale, platform: Platform): Localization {
-        val url = getLocalizationUrlFromRemote(locale, platform, configuration.isDeveloperMode)
-        return getLocalizationFromRemote(url)
+    private suspend fun fetchLocalization(locale: Locale, platform: Platform): Localization {
+        return fetchLocalization(fetchUrl(locale, platform, configuration.isDeveloperMode))
     }
 
-    private suspend fun getLocalizationFromRemote(localizationUrl: URL): Localization {
-
-        val request = Request
+    private suspend fun fetchLocalization(localizationUrl: URL): Localization {
+        return Request
             .Builder()
             .url("$localizationUrl")
             .build()
-
-        return suspendCoroutine {
-            okHttpClient
-                .newCall(request)
-                .execute()
-                .use { response ->
-                    if (!response.isSuccessful) {
-                        throw IOException("Unexpected response code: $response")
-                    } else {
-                        it.resume(response
-                            .body
-                            .let { body -> body ?: throw IOException("No body provided in response: $response") }
-                            .string()
-                            .let { json -> LocalizationParser.parse(json) })
-                    }
-                }
-        }
+            .let { execute(it) { body -> LocalizationParser.parse(body) } }
     }
 
-    private suspend fun getLocalizationUrlFromRemote(locale: Locale, platform: Platform, isDeveloperMode: Boolean): URL {
-
-
-        val request = Request
+    private suspend fun fetchUrl(locale: Locale, platform: Platform, isDeveloperMode: Boolean): URL {
+        return Request
             .Builder()
             .url("${PlatformLocalizationsUrl(platform, isDeveloperMode)}")
             .build()
+            .let { execute(it) { body -> LocalizationUrlParser.parse(locale, body) } }
+    }
 
-        return suspendCoroutine {
-            okHttpClient
-                .newCall(request)
-                .execute()
-                .use { response ->
-                    if (!response.isSuccessful) {
-                        throw IOException("Unexpected response code: $response")
-                    } else {
-                        it.resume(response
-                            .body
-                            .let { body -> body ?: throw IOException("No body provided in response: $response") }
-                            .string()
-                            .let { json -> LocalizationUrlParser.parse(locale, json) })
-                    }
+    private suspend fun <R> execute(request: Request, bodyTransformer: (String) -> R): R {
+        return suspendCoroutine { continuation ->
+            okHttpClient.newCall(request).enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    throw IOException(e)
                 }
-
+                override fun onResponse(call: Call, response: Response) {
+                    response
+                        .body
+                        .let { body -> body ?: throw IOException("No body provided in response: $response") }
+                        .string()
+                        .let(bodyTransformer)
+                        .let { continuation.resume(it) }
+                }
+            })
         }
     }
 }
