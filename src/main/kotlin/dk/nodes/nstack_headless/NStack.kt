@@ -1,10 +1,13 @@
 package dk.nodes.nstack_headless
 
+import dk.nodes.nstack_headless.common.dependency_injection.OkHttpClientProvider
 import dk.nodes.nstack_headless.common.dependency_injection.Provider
+import dk.nodes.nstack_headless.localize.Locale
+import dk.nodes.nstack_headless.localize.Platform
+import dk.nodes.nstack_headless.localize.data.CachedRemoteLocalizationsRepository
+import kotlinx.coroutines.future.future
+import kotlinx.coroutines.runBlocking
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
 
 class NStack(
     private val configuration: Configuration,
@@ -13,9 +16,20 @@ class NStack(
     fun getTranslation(
         sectionKey: String,
         translationKey: String,
-        language: String,
+        languageCode: String,
+        countryCode: String,
     ): CompletableFuture<String> {
-        return CompletableFuture.completedFuture("Hello, world!")
+        val localizationsRepository = CachedRemoteLocalizationsRepository(
+            OkHttpClientProvider(this),
+            this)
+
+        return runBlocking {
+            future {
+                localizationsRepository.getLocalization(Locale(languageCode, countryCode), Platform.BACKEND)
+                    .getOrThrow()
+                    .get(sectionKey, translationKey).orEmpty()
+            }
+        }
     }
 
     override fun provide() = configuration

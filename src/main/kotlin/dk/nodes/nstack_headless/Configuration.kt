@@ -2,13 +2,19 @@ package dk.nodes.nstack_headless
 
 
 data class Configuration constructor(
-    internal val appIdKey: String,
-    internal val appApiKey: String,
-    internal val environment: String,
+     val appIdKey: String,
+     val appApiKey: String,
+     val environment: String,
 
-    internal val cacheLifetimeMinutes: UInt = 60u,
-    internal val placeholderPrefix: String = "{",
-    internal val placeholderSuffix: String = "}",
+     val cacheLifetimeMinutes: UInt,
+     val placeholderPrefix: String,
+     val placeholderSuffix: String,
 
-    internal val isDeveloperMode: Boolean = false,
-)
+     val isDeveloperMode: Boolean,
+) {
+     constructor(
+          appIdKey: String,
+          appApiKey: String,
+          environment: String,
+     ) : this(appIdKey, appApiKey, environment, 60u, "{", "}", true)
+}

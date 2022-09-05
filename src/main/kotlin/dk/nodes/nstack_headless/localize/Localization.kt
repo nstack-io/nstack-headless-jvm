@@ -13,7 +13,9 @@ internal data class Localization(
         translationKey: TranslationKey,
         localizedText: String
     ) {
-        sections[sectionKey] = mutableMapOf(translationKey to localizedText)
+        sections.getOrPut(sectionKey) {
+            mutableMapOf()
+        }[translationKey] = localizedText
     }
 
     fun get(sectionKey: SectionKey, translationKey: TranslationKey): String? {
