@@ -5,13 +5,16 @@ import dk.nodes.nstack_headless.common.dependency_injection.Provider
 import dk.nodes.nstack_headless.localize.Locale
 import dk.nodes.nstack_headless.localize.Platform
 import dk.nodes.nstack_headless.localize.data.CachedRemoteLocalizationsRepository
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.future.future
-import kotlinx.coroutines.runBlocking
 import java.util.concurrent.CompletableFuture
 
 class NStack(
     private val configuration: Configuration,
 ) : Provider<Configuration> {
+
+    private var localizationsRepository =
+        CachedRemoteLocalizationsRepository(OkHttpClientProvider(this),this)
 
     fun getTranslation(
         sectionKey: String,
@@ -19,16 +22,11 @@ class NStack(
         languageCode: String,
         countryCode: String,
     ): CompletableFuture<String> {
-        val localizationsRepository = CachedRemoteLocalizationsRepository(
-            OkHttpClientProvider(this),
-            this)
-
-        return runBlocking {
-            future {
-                localizationsRepository.getLocalization(Locale(languageCode, countryCode), Platform.BACKEND)
-                    .getOrThrow()
-                    .get(sectionKey, translationKey).orEmpty()
-            }
+        return GlobalScope.future {
+            localizationsRepository.getLocalization(Locale(languageCode, countryCode), Platform.BACKEND)
+                .getOrThrow()
+                .get(sectionKey, translationKey)
+                .orEmpty()
         }
     }
 

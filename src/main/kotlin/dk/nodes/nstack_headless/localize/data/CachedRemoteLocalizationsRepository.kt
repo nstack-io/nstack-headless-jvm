@@ -8,7 +8,8 @@ import dk.nodes.nstack_headless.localize.Localization
 import dk.nodes.nstack_headless.localize.Platform
 import dk.nodes.nstack_headless.localize.data.parsers.LocalizationParser
 import dk.nodes.nstack_headless.localize.data.parsers.LocalizationUrlParser
-import okhttp3.*
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import java.io.IOException
 import java.net.URL
 import java.util.concurrent.TimeUnit.MINUTES
@@ -54,19 +55,12 @@ internal class CachedRemoteLocalizationsRepository(
 
     private suspend fun <R> execute(request: Request, bodyTransformer: (String) -> R): R {
         return suspendCoroutine { continuation ->
-            okHttpClient.newCall(request).enqueue(object : Callback {
-                override fun onFailure(call: Call, e: IOException) {
-                    throw IOException(e)
-                }
-                override fun onResponse(call: Call, response: Response) {
-                    response
-                        .body
-                        .let { body -> body ?: throw IOException("No body provided in response: $response") }
-                        .string()
-                        .let(bodyTransformer)
-                        .let { continuation.resume(it) }
-                }
-            })
+            okHttpClient.newCall(request).execute()
+                .body
+                .let { body -> body ?: throw IOException("No body provided in response") }
+                .string()
+                .let(bodyTransformer)
+                .let { continuation.resume(it) }
         }
     }
 }
